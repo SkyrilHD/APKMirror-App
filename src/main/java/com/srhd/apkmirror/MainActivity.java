@@ -5,11 +5,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.DownloadManager;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.webkit.*;
 import android.widget.Toast;
+import android.os.Environment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         permissions();
 
@@ -26,6 +30,25 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         webView.loadUrl("https://www.apkmirror.com/");
 
+        webView.setDownloadListener(new DownloadListener()
+        {
+            @Override
+            public void onDownloadStart(String url, String userAgent,
+                                        String contentDisposition, String mimeType,
+                                        long contentLength) {
+                DownloadManager.Request req = new DownloadManager.Request(
+                        Uri.parse(url));
+                req.setMimeType(mimeType);
+                req.setDescription("Downloading File...");
+                String FileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                req.setTitle(FileName);
+                req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                req.setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS, FileName);
+                DownloadManager DM = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                DM.enqueue(req);
+                Toast.makeText(getApplicationContext(), "Your download will start immediately.", Toast.LENGTH_LONG).show();
+            }});
     }
 
     @Override
